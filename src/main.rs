@@ -25,6 +25,10 @@ detectif [optiont] [path] [window cap] [output.csv]
 
 Example: detecif -f path/to/file 18 output.csv
 
+Options:
+    -f: single file
+    -si: standard in
+
 Goes through a sequence and finds patterns. Made to find motifs in a nucleotide sequence. Starts at a base length of 3 nucleotides and increases the size of the window until it reaches a user defined cap. 
 
 By itself detectif takes a fasta file and searches through the sequence outputtin a .csv with the resulting patterns and the number of times that they show up. 
@@ -51,17 +55,17 @@ In the genome pipeline it can take the sequences as a standard input. Using moku
         }
         window_cap.push_str(&args().nth(2).expect("Enter output Maximum motif length"));
         path.push_str(&args().nth(3).expect("Enter output file name"));
-        let mut count = 1;
+        let mut count = 0;
         let total = input.clone();
         for id in input {
             let map = search(
                 &id,
                 window_cap.parse::<u16>().unwrap(),
-                &ids[count - 1],
-                total.len() as i32,
+                &ids[count],
+                (total.len() - 1) as i32,
                 count as i32,
             );
-            let numbered_path = format!("{}{}.csv", path, &ids[count - 1]);
+            let numbered_path = format!("{}{}.csv", path, &ids[count]);
             write_csv(&map, &numbered_path);
             count += 1;
         }
@@ -79,9 +83,10 @@ In the genome pipeline it can take the sequences as a standard input. Using moku
         for line in file.lines() {
             let line = line.unwrap();
             if line.starts_with(">") {
-                id.push_str(&line);
+                id.push_str(&line[1..].trim().to_string());
+            } else {
+                aggregate_lines.push_str(&line);
             }
-            aggregate_lines.push_str(&line);
         }
         let map = search(
             &aggregate_lines,
@@ -130,7 +135,7 @@ fn search(
         if sequence == "NA" {
             break;
         }
-        for begin in 0..(bstring.len() - (window_size as usize)) {
+        for begin in 0..(bstring.len() - (window_size as usize) + 1) {
             let current_pattern = str::from_utf8(&bstring[begin..begin + window_size as usize])
                 .unwrap()
                 .to_string();
