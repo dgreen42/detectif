@@ -48,6 +48,9 @@ In the genome pipeline it can take the sequences as a standard input. Using moku
         for line in std_input {
             let line = line.unwrap();
             if line.starts_with(">") {
+                if line.len() == 1 {
+                    continue;
+                }
                 ids.push(line[1..].to_string());
             } else {
                 input.push(line);
@@ -62,8 +65,8 @@ In the genome pipeline it can take the sequences as a standard input. Using moku
                 &id,
                 window_cap.parse::<u16>().unwrap(),
                 &ids[count],
-                (total.len() - 1) as i32,
-                count as i32,
+                (total.len()) as i32,
+                (count + 1) as i32,
             );
             let numbered_path = format!("{}{}.csv", path, &ids[count]);
             write_csv(&map, &numbered_path);
@@ -80,6 +83,7 @@ In the genome pipeline it can take the sequences as a standard input. Using moku
         let file = read(input).unwrap();
         let mut aggregate_lines = String::new();
         let mut id = String::new();
+
         for line in file.lines() {
             let line = line.unwrap();
             if line.starts_with(">") {
